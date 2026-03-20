@@ -1,0 +1,297 @@
+
+<!DOCTYPE html>
+<!--
+  ============================================================
+  PERSONAL PORTFOLIO — index.html
+  Sirf HTML structure yahan hai.
+  CSS  → style.css
+  JS   → script.js
+  ============================================================
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HARSHGOSWAMI— Portfolio</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- ✅ CSS file link -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Custom cursor -->
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <!-- Scroll to top button -->
+  <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+  <!-- ═══════════════════════════
+       NAVIGATION
+       ═══════════════════════════ -->
+  <nav id="navbar">
+    <div class="container nav-inner">
+      <!-- 👇 Change "YN" to your initials -->
+      <a href="#hero" class="nav-logo">HG<span>.</span></a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#about">About</a></li>
+        <li><a href="#skills">Skills</a></li>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#education">Education</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <button class="hamburger" id="hamburger" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════
+       HERO SECTION
+       ═══════════════════════════ -->
+  <section id="hero">
+    <div class="container" style="position:relative;">
+      <div class="hero-content">
+
+        <div class="hero-greeting">Hello, World!</div>
+
+        <!-- 👇 Change to your name -->
+        <h1 class="hero-name">
+          Your<br/>
+          <span class="italic">HARSH GOSWAMI</span>
+        </h1>
+
+        <!-- Typing animation — roles defined in script.js -->
+        <div class="hero-role" id="heroRole">
+          <span id="typed"></span><span class="typed-cursor"></span>
+        </div>
+
+        <!-- 👇 Change city and bio -->
+        <p class="hero-bio">
+          A passionate BCA student from Bhopal, building cool things
+          with code. I love creating websites that are both functional and beautiful.
+        </p>
+
+        <div class="hero-cta">
+          <a href="#projects" class="btn btn-primary">View My Work →</a>
+          <a href="#contact" class="btn btn-outline">Get In Touch</a>
+        </div>
+      </div>
+
+      <!-- 👇 Change social links href="#" to your actual URLs -->
+      <div class="hero-socials">
+        <a href="#">GitHub</a>
+        <a href="#">LinkedIn</a>
+        <a href="#">Twitter</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════
+       ABOUT SECTION
+       ═══════════════════════════ -->
+  <section id="about">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-num">01.</span>
+        <h2 class="section-title">About Me</h2>
+        <div class="section-line"></div>
+      </div>
+
+      <div class="about-grid">
+        <div class="about-text reveal">
+          <!-- 👇 Change all personal info here -->
+          <p>
+            Hi! I'm <strong>Harsh Goswami</strong>, a BCA 2nd semester student
+            at The Bhopal School of Social Science. I'm passionate about web development,
+            problem solving, and building projects that make a difference.
+          </p>
+          <p>
+            When I'm not coding, I enjoy <strong>gaming</strong>,
+            <strong>reading tech blogs</strong>, and exploring new
+            technologies. I believe in continuous learning.
+          </p>
+          <p>
+            I'm currently looking for internship opportunities to apply
+            my skills in a real-world environment.
+          </p>
+          <br/>
+          <!-- 👇 Change href to your CV/resume file -->
+          <a href="#" class="btn btn-outline" style="display:inline-flex;">
+            Download CV ↓
+          </a>
+        </div>
+
+        <div class="about-image-box reveal">
+          <!-- 👇 To add your photo:
+               1. Copy your photo to this folder, name it "photo.jpg"
+               2. Replace the emoji below with:
+               <img src="photo.jpg" alt="Your Name" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" />
+          -->
+          <div class="about-photo"> <img src="ha2.jpg" alt="Harsh Goswami" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" /></div>
+
+          <!-- 👇 Change these numbers to match your real stats -->
+          <div class="about-stats">
+            <div class="stat-box">
+              <div class="stat-num">10+</div>
+              <div class="stat-label">Projects Done</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-num">2+</div>
+              <div class="stat-label">Years Coding</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-num">5+</div>
+              <div class="stat-label">Technologies</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-num">0</div>
+              <div class="stat-label">Bugs (lol)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════
+       SKILLS SECTION
+       (Data comes from script.js → skillsData object)
+       ═══════════════════════════ -->
+  <section id="skills">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-num">02.</span>
+        <h2 class="section-title">Skills</h2>
+        <div class="section-line"></div>
+      </div>
+      <!-- Tabs and skill bars are built by JS automatically -->
+      <div class="skills-tabs reveal" id="skillsTabs"></div>
+      <div id="skillsPanels" class="reveal"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════
+       PROJECTS SECTION
+       (Data comes from script.js → projectsData array)
+       ═══════════════════════════ -->
+  <section id="projects">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-num">03.</span>
+        <h2 class="section-title">Projects</h2>
+        <div class="section-line"></div>
+      </div>
+      <!-- Filter buttons and cards are built by JS automatically -->
+      <div class="projects-filter reveal" id="projectsFilter"></div>
+      <div class="projects-grid reveal" id="projectsGrid"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════
+       EDUCATION TIMELINE
+       (Data comes from script.js → linked list nodes)
+       ═══════════════════════════ -->
+  <section id="education">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-num">04.</span>
+        <h2 class="section-title">Education</h2>
+        <div class="section-line"></div>
+      </div>
+      <!-- Timeline items are built by JS automatically -->
+      <div class="timeline reveal" id="timeline"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════
+       CONTACT SECTION
+       ═══════════════════════════ -->
+  <section id="contact">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-num">05.</span>
+        <h2 class="section-title">Contact</h2>
+        <div class="section-line"></div>
+      </div>
+
+      <div class="contact-grid">
+        <div class="contact-info reveal">
+          <h3>Let's Work<br/>Together.</h3>
+          <p>
+            I'm currently open to internship opportunities and
+            freelance projects. Whether you have a question or just
+            want to say hi, my inbox is always open!
+          </p>
+          <div class="contact-items">
+            <!-- 👇 Change to your actual email, city, college -->
+            <div class="contact-item">
+              <div class="contact-icon">📧</div>
+              <div>
+                <div class="contact-label">Email</div>
+                <div class="contact-val">HarxhGoswami@email.com</div>
+              </div>
+            </div>
+            <div class="contact-item">
+              <div class="contact-icon">📍</div>
+              <div>
+                <div class="contact-label">Location</div>
+                <div class="contact-val">Bhopal MadhyaPradesh, India</div>
+              </div>
+            </div>
+            <div class="contact-item">
+              <div class="contact-icon">🎓</div>
+              <div>
+                <div class="contact-label">College</div>
+                <div class="contact-val">The Bhopal School Of Social Sciences</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact Form -->
+        <div class="reveal">
+          <div class="contact-form" id="contactForm">
+            <div class="form-group">
+              <label class="form-label">Your Name</label>
+              <input type="text" class="form-input" id="formName" placeholder="John Doe" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input type="email" class="form-input" id="formEmail" placeholder="john@example.com" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Message</label>
+              <textarea class="form-textarea" id="formMsg" placeholder="Tell me about your project..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="submitForm()" style="cursor:none;">
+              Send Message →
+            </button>
+          </div>
+          <!-- Shows after form submit -->
+          <div class="form-success" id="formSuccess">
+            <div class="check">✅</div>
+            <h3 style="font-family:'Playfair Display',serif; margin-bottom:8px;">Message Sent!</h3>
+            <p>Thank you! I'll get back to you soon.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <!-- 👇 Change "Your Name" and year -->
+  <footer>
+    <div class="container">
+      Designed &amp; Built by <span>HARSH GOSWAMI</span> · BCA 2026 · Made with ♥ and JavaScript
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+
+</body>
+</html>
