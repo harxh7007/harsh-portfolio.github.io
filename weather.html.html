@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  WEATHER APP
+  BCA Portfolio Project #3
+
+  Features:
+  - Real weather data via OpenWeatherMap API
+  - Demo mode (works without API key too!)
+  - Search by city name
+  - Shows: temp, humidity, wind, condition
+  - Recent searches (uses QUEUE data structure!)
+  - Beautiful animated UI
+
+  Data Structures used:
+  - QUEUE  — recent searches ke liye
+  - OBJECT — weather data store karne ke liye
+  ============================================================
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Weather App — BCA Project</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Outfit', sans-serif;
+      background: #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    /* Dynamic background — JS changes this */
+    .bg-layer {
+      position: fixed; inset: 0;
+      transition: background 1.5s ease;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      z-index: 0;
+    }
+
+    .bg-layer.sunny {
+      background: linear-gradient(135deg, #f59e0b 0%, #ef4444 50%, #dc2626 100%);
+    }
+    .bg-layer.cloudy {
+      background: linear-gradient(135deg, #475569 0%, #334155 50%, #1e293b 100%);
+    }
+    .bg-layer.rainy {
+      background: linear-gradient(135deg, #1e40af 0%, #1e3a5f 50%, #0f172a 100%);
+    }
+    .bg-layer.night {
+      background: linear-gradient(135deg, #1e1b4b 0%, #0f0f2d 50%, #000 100%);
+    }
+    .bg-layer.snow {
+      background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 50%, #60a5fa 100%);
+    }
+
+    /* Floating circles in background */
+    .bg-circle {
+      position: fixed;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.03);
+      pointer-events: none;
+    }
+    .bg-circle-1 { width: 400px; height: 400px; top: -100px; right: -100px; }
+    .bg-circle-2 { width: 300px; height: 300px; bottom: -80px; left: -80px; }
+
+    .app {
+      width: 100%;
+      max-width: 480px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Search bar ── */
+    .search-card {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 8px 8px 8px 20px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .search-input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      color: white;
+    }
+    .search-input::placeholder { color: rgba(255,255,255,0.35); }
+    .search-btn {
+      background: white;
+      color: #0f172a;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 20px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .search-btn:hover {
+      background: #f1f5f9;
+      transform: scale(1.03);
+    }
+    .search-btn:active { transform: scale(0.97); }
+
+    /* ── Main weather card ── */
+    .weather-card {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 28px;
+      padding: 36px 32px;
+      margin-bottom: 16px;
+      text-align: center;
+      color: white;
+      transition: all 0.5s ease;
+    }
+
+    .city-name {
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 4px;
+    }
+    .country {
+      font-size: 13px;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 28px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .weather-icon {
+      font-size: 80px;
+      line-height: 1;
+      margin-bottom: 16px;
+      display: block;
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-10px); }
+    }
+
+    .temp-main {
+      font-size: 5rem;
+      font-weight: 200;
+      line-height: 1;
+      margin-bottom: 8px;
+      letter-spacing: -2px;
+    }
+    .temp-main sup {
+      font-size: 2rem;
+      font-weight: 300;
+      vertical-align: super;
+    }
+
+    .condition {
+      font-size: 18px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.75);
+      margin-bottom: 6px;
+      text-transform: capitalize;
+    }
+    .feels-like {
+      font-size: 13px;
+      color: rgba(255,255,255,0.4);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ── Stats row ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 32px;
+      padding-top: 28px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .stat-item { text-align: center; }
+    .stat-icon { font-size: 20px; margin-bottom: 6px; display: block; }
+    .stat-val {
+      font-size: 18px;
+      font-weight: 600;
+      color: white;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 3px;
+    }
+
+    /* ── Recent searches (Queue) ── */
+    .recent-card {
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
+    }
+    .recent-title {
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      margin-bottom: 12px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .recent-list {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .recent-chip {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .recent-chip:hover {
+      background: rgba(255,255,255,0.2);
+      color: white;
+    }
+
+    /* ── API key note ── */
+    .api-note {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 16px 18px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.35);
+      line-height: 1.8;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .api-note span { color: rgba(255,255,255,0.6); }
+
+    /* Loading spinner */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 40px;
+      color: rgba(255,255,255,0.5);
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Error state */
+    .error-msg {
+      display: none;
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 14px;
+      padding: 14px 18px;
+      color: #fca5a5;
+      font-size: 14px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    /* Demo badge */
+    .demo-badge {
+      display: inline-block;
+      background: rgba(251,191,36,0.2);
+      border: 1px solid rgba(251,191,36,0.3);
+      color: #fbbf24;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-layer" id="bgLayer"></div>
+<div class="bg-circle bg-circle-1"></div>
+<div class="bg-circle bg-circle-2"></div>
+
+<div class="app">
+
+  <!-- Search -->
+  <div class="search-card">
+    <input
+      type="text"
+      class="search-input"
+      id="searchInput"
+      placeholder="Search city... (e.g. Mumbai)"
+    />
+    <button class="search-btn" onclick="searchWeather()">Search →</button>
+  </div>
+
+  <!-- Error -->
+  <div class="error-msg" id="errorMsg"></div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    Fetching weather...
+  </div>
+
+  <!-- Weather card -->
+  <div class="weather-card" id="weatherCard">
+    <div class="demo-badge" id="demoBadge">Demo Mode</div>
+    <div class="city-name" id="cityName">Mumbai</div>
+    <div class="country"   id="countryName">IN · Maharashtra</div>
+    <span class="weather-icon" id="weatherIcon">⛅</span>
+    <div class="temp-main" id="tempMain">28<sup>°C</sup></div>
+    <div class="condition"  id="condition">Partly Cloudy</div>
+    <div class="feels-like" id="feelsLike">Feels like 31°C</div>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <span class="stat-icon">💧</span>
+        <div class="stat-val"  id="humidity">72%</div>
+        <div class="stat-label">Humidity</div>
+      </div>
+      <div class="stat-item">
+        <span class="stat-icon">💨</span>
+        <div class="stat-val"  id="windSpeed">14 km/h</div>
+        <div class="stat-label">Wind</div>
+      </div>
+      <div class="stat-item">
+        <span class="stat-icon">👁️</span>
+        <div class="stat-val"  id="visibility">10 km</div>
+        <div class="stat-label">Visibility</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent searches -->
+  <div class="recent-card" id="recentCard" style="display:none;">
+    <div class="recent-title">Recent Searches</div>
+    <div class="recent-list" id="recentList"></div>
+  </div>
+
+  <!-- API Note -->
+  <div class="api-note">
+    <span>// How to enable real weather data:</span><br/>
+    1. Get free API key from openweathermap.org<br/>
+    2. In script.js, set: <span>API_KEY = "your_key_here"</span><br/>
+    3. Real data will load automatically!
+  </div>
+
+</div>
+
+
+<script>
+  /* ═══════════════════════════════════════════════
+     API KEY — openweathermap.org se free mein milti hai
+     Agar nahi hai toh DEMO_MODE = true rakho
+     ═══════════════════════════════════════════════ */
+  const API_KEY   = 'ba6228e5ba5a60ca0f8ce0fe58c90f76';           // 👈 Apni API key yahan paste karo
+  const DEMO_MODE = false; // key nahi hai toh demo mode
+
+
+  /* ═══════════════════════════════════════════════
+     DATA STRUCTURE: QUEUE
+     Recent searches store karne ke liye
+     FIFO — purani search hatao, nayi add karo
+     Max 5 searches store karo
+     ═══════════════════════════════════════════════ */
+  const searchQueue = [];   // Queue
+  const QUEUE_MAX   = 5;
+
+  function enqueue(city) {
+    // Duplicate remove karo
+    const idx = searchQueue.indexOf(city);
+    if (idx !== -1) searchQueue.splice(idx, 1);
+
+    searchQueue.push(city);             // Queue mein add (end pe)
+
+    if (searchQueue.length > QUEUE_MAX) {
+      searchQueue.shift();              // Queue full — purani (front) hatao
+    }
+    renderRecent();
+  }
+
+  function renderRecent() {
+    const card = document.getElementById('recentCard');
+    const list = document.getElementById('recentList');
+
+    if (searchQueue.length === 0) {
+      card.style.display = 'none';
+      return;
+    }
+    card.style.display = 'block';
+
+    // Reverse dikhao — latest pehle
+    list.innerHTML = [...searchQueue].reverse().map(city => `
+      <div class="recent-chip" onclick="searchCity('${city}')">${city}</div>
+    `).join('');
+  }
+
+
+  /* ═══════════════════════════════════════════════
+     DEMO DATA — API key nahi hai toh yeh dikhao
+     ═══════════════════════════════════════════════ */
+  const demoData = {
+    'mumbai':     { city:'Mumbai',    country:'IN', temp:28, feels:31, condition:'Partly Cloudy', icon:'⛅', humidity:72, wind:14, vis:10, type:'cloudy' },
+    'delhi':      { city:'Delhi',     country:'IN', temp:35, feels:39, condition:'Sunny',         icon:'☀️', humidity:45, wind:8,  vis:8,  type:'sunny'  },
+    'bangalore':  { city:'Bangalore', country:'IN', temp:24, feels:24, condition:'Clear Sky',     icon:'🌤️', humidity:60, wind:10, vis:12, type:'sunny'  },
+    'kolkata':    { city:'Kolkata',   country:'IN', temp:32, feels:36, condition:'Humid',         icon:'🌫️', humidity:85, wind:6,  vis:6,  type:'cloudy' },
+    'chennai':    { city:'Chennai',   country:'IN', temp:33, feels:38, condition:'Hot & Sunny',   icon:'☀️', humidity:70, wind:12, vis:9,  type:'sunny'  },
+    'pune':       { city:'Pune',      country:'IN', temp:26, feels:27, condition:'Cloudy',        icon:'☁️', humidity:65, wind:11, vis:10, type:'cloudy' },
+    'hyderabad':  { city:'Hyderabad', country:'IN', temp:30, feels:33, condition:'Clear',         icon:'🌤️', humidity:55, wind:9,  vis:11, type:'sunny'  },
+    'jaipur':     { city:'Jaipur',    country:'IN', temp:38, feels:42, condition:'Very Hot',      icon:'🔆', humidity:30, wind:7,  vis:7,  type:'sunny'  },
+    'indore':     { city:'Indore',    country:'IN', temp:29, feels:32, condition:'Partly Cloudy', icon:'⛅', humidity:58, wind:13, vis:10, type:'cloudy' },
+    'london':     { city:'London',    country:'GB', temp:14, feels:11, condition:'Rainy',         icon:'🌧️', humidity:88, wind:22, vis:5,  type:'rainy'  },
+    'new york':   { city:'New York',  country:'US', temp:18, feels:16, condition:'Cloudy',        icon:'☁️', humidity:65, wind:18, vis:9,  type:'cloudy' },
+    'tokyo':      { city:'Tokyo',     country:'JP', temp:22, feels:22, condition:'Clear',         icon:'🌤️', humidity:60, wind:10, vis:15, type:'sunny'  },
+    'dubai':      { city:'Dubai',     country:'AE', temp:40, feels:44, condition:'Sunny & Hot',   icon:'☀️', humidity:35, wind:15, vis:10, type:'sunny'  },
+    'paris':      { city:'Paris',     country:'FR', temp:16, feels:14, condition:'Overcast',      icon:'☁️', humidity:75, wind:20, vis:7,  type:'cloudy' },
+  };
+
+
+  /* ═══════════════════════════════════════════════
+     SEARCH WEATHER
+     ═══════════════════════════════════════════════ */
+  function searchWeather() {
+    const input = document.getElementById('searchInput');
+    const city  = input.value.trim();
+    if (!city) {
+      input.style.borderColor = 'rgba(239,68,68,0.5)';
+      setTimeout(() => input.style.borderColor = '', 600);
+      return;
+    }
+    searchCity(city);
+  }
+
+  function searchCity(city) {
+    document.getElementById('searchInput').value = city;
+    showLoading(true);
+    hideError();
+
+    if (DEMO_MODE) {
+      // Demo mode — fake delay for realism
+      setTimeout(() => {
+        const key  = city.toLowerCase();
+        const data = demoData[key];
+        if (data) {
+          showWeather(data, true);
+          enqueue(city);
+        } else {
+          showError(`City "${city}" not found in demo.\nTry: Mumbai, Delhi, London, Tokyo, Dubai`);
+        }
+        showLoading(false);
+      }, 800);
+    } else {
+      // Real API call
+      fetchRealWeather(city);
+    }
+  }
+
+
+  /* ═══════════════════════════════════════════════
+     REAL API CALL — OpenWeatherMap
+     ═══════════════════════════════════════════════ */
+  async function fetchRealWeather(city) {
+    try {
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric`;
+      const res  = await fetch(url);
+      const json = await res.json();
+
+      if (json.cod !== 200) {
+        showError(`City "${city}" not found. Please check spelling.`);
+        showLoading(false);
+        return;
+      }
+
+      // API response ko apne format mein convert karo (Object mapping)
+      const data = {
+        city:      json.name,
+        country:   json.sys.country,
+        temp:      Math.round(json.main.temp),
+        feels:     Math.round(json.main.feels_like),
+        condition: json.weather[0].description,
+        icon:      getWeatherIcon(json.weather[0].id),
+        humidity:  json.main.humidity,
+        wind:      Math.round(json.wind.speed * 3.6),
+        vis:       Math.round((json.visibility || 10000) / 1000),
+        type:      getWeatherType(json.weather[0].id)
+      };
+
+      showWeather(data, false);
+      enqueue(city);
+    } catch (err) {
+      showError('Network error. Please check your connection.');
+    }
+    showLoading(false);
+  }
+
+
+  /* ═══════════════════════════════════════════════
+     SHOW WEATHER DATA — DOM update karo
+     ═══════════════════════════════════════════════ */
+  function showWeather(data, isDemo) {
+    document.getElementById('demoBadge').style.display  = isDemo ? 'inline-block' : 'none';
+    document.getElementById('cityName').textContent     = data.city;
+    document.getElementById('countryName').textContent  = data.country;
+    document.getElementById('weatherIcon').textContent  = data.icon;
+    document.getElementById('tempMain').innerHTML       = `${data.temp}<sup>°C</sup>`;
+    document.getElementById('condition').textContent    = data.condition;
+    document.getElementById('feelsLike').textContent    = `Feels like ${data.feels}°C`;
+    document.getElementById('humidity').textContent     = `${data.humidity}%`;
+    document.getElementById('windSpeed').textContent    = `${data.wind} km/h`;
+    document.getElementById('visibility').textContent   = `${data.vis} km`;
+
+    // Background change karo weather ke hisaab se
+    const bg = document.getElementById('bgLayer');
+    bg.className = 'bg-layer ' + (data.type || 'cloudy');
+  }
+
+
+  /* ── Helper functions ── */
+  function getWeatherIcon(code) {
+    if (code >= 200 && code < 300) return '⛈️';
+    if (code >= 300 && code < 400) return '🌦️';
+    if (code >= 500 && code < 600) return '🌧️';
+    if (code >= 600 && code < 700) return '❄️';
+    if (code >= 700 && code < 800) return '🌫️';
+    if (code === 800)               return '☀️';
+    if (code === 801 || code === 802) return '⛅';
+    return '☁️';
+  }
+
+  function getWeatherType(code) {
+    if (code === 800) return 'sunny';
+    if (code >= 500 && code < 600) return 'rainy';
+    if (code >= 600 && code < 700) return 'snow';
+    if (code >= 900) return 'night';
+    return 'cloudy';
+  }
+
+  function showLoading(show) {
+    document.getElementById('loading').style.display     = show ? 'block' : 'none';
+    document.getElementById('weatherCard').style.display = show ? 'none'  : 'block';
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent    = msg;
+    el.style.display  = 'block';
+  }
+
+  function hideError() {
+    document.getElementById('errorMsg').style.display = 'none';
+  }
+
+
+  /* ── Keyboard: Enter to search ── */
+  document.getElementById('searchInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') searchWeather();
+  });
+
+
+  /* ── INIT — Mumbai ka demo dikhao by default ── */
+  searchCity('Mumbai');
+</script>
+</body>
+</html>
